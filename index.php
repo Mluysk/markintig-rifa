@@ -248,6 +248,28 @@ document.getElementById("nextPage").addEventListener("click", () => {
   renderGrid(currentGrid);
 });
 
+let lastWinnerNumberMain = null;
+let winnerConfettiShown = false;
+
+function launchWinnerConfetti(target){
+  if(winnerConfettiShown){
+    return;
+  }
+  winnerConfettiShown = true;
+  const container = document.createElement("div");
+  container.className = "confetti";
+  for(let i=0;i<28;i+=1){
+    const piece = document.createElement("span");
+    piece.className = "confetti-piece";
+    piece.style.left = `${Math.random() * 100}%`;
+    piece.style.background = `hsl(${Math.random() * 360}, 90%, 60%)`;
+    piece.style.animationDelay = `${Math.random() * 0.2}s`;
+    container.appendChild(piece);
+  }
+  target.appendChild(container);
+  setTimeout(() => container.remove(), 1400);
+}
+
 function renderWinner(winner){
   const card = document.getElementById("winnerCard");
   const content = document.getElementById("winnerContent");
@@ -257,11 +279,20 @@ function renderWinner(winner){
   if(!list.length){
     card.hidden = true;
     content.innerHTML = "";
+    lastWinnerNumberMain = null;
+    winnerConfettiShown = false;
     stopFireworks();
     return;
   }
   card.hidden = false;
-  content.innerHTML = list.map(w => `
+  const firstWinner = list[0];
+  if(lastWinnerNumberMain !== firstWinner.num){
+    winnerConfettiShown = false;
+  }
+  lastWinnerNumberMain = firstWinner.num;
+  content.innerHTML = `
+    <div class="winner-message">PARABÊNS PELA CONQUISTA.!!!</div>
+    ${list.map(w => `
     <div class="winner-item">
       <div class="winner-number">#${String(w.num).padStart(4,"0")}</div>
       <div class="winner-info">
@@ -270,10 +301,12 @@ function renderWinner(winner){
         ${w.whatsapp ? `<div>WhatsApp: ${esc(w.whatsapp)}</div>` : ""}
       </div>
     </div>
-  `).join("");
+  `).join("")}
+  `;
   fireworksLeft.hidden = false;
   fireworksRight.hidden = false;
   startFireworks();
+  launchWinnerConfetti(card);
 }
 
 let fireworksInterval = null;

@@ -167,6 +167,13 @@ button:hover{background:rgba(255,255,255,.10)}
   font-weight:900
 }
 .winner-info{opacity:.9}
+.winner-message{
+  font-weight:800;
+  font-size:16px;
+  letter-spacing:.5px;
+  color:#fde68a;
+  text-transform:uppercase
+}
 .fireworks{
   position:fixed;
   top:0;
