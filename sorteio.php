@@ -94,6 +94,7 @@ function renderWinner(winner){
   if(!winner){
     confettiShown = false;
     resultEl.hidden = true;
+    updateDrawButton();
     return;
   }
   resultEl.hidden = false;
@@ -103,6 +104,7 @@ function renderWinner(winner){
     <div>CPF: ${winner.cpf}</div>
     ${winner.whatsapp ? `<div>WhatsApp: ${winner.whatsapp}</div>` : ""}
   `;
+  updateDrawButton();
 }
 
 async function loadWinner(){
@@ -140,7 +142,7 @@ function updateClearButton(){
   clearWinnerBtn.hidden = !(hasWinner && raffleReset);
 }
 function updateDrawButton(){
-  drawBtn.disabled = !(raffleOpen && passwordOk);
+  drawBtn.disabled = !(raffleOpen && passwordOk && !hasWinner);
 }
 
 function launchConfetti(target){
