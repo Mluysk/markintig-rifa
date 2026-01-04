@@ -165,6 +165,44 @@ button:hover{background:rgba(255,255,255,.10)}
   font-weight:900
 }
 .winner-info{opacity:.9}
+.fireworks{
+  position:fixed;
+  top:0;
+  bottom:0;
+  width:22vw;
+  pointer-events:none;
+  z-index:10
+}
+.fireworks-left{left:0}
+.fireworks-right{right:0}
+.firework{
+  position:absolute;
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:hsl(var(--hue, 45), 90%, 60%);
+  box-shadow:
+    0 0 8px hsla(var(--hue, 45), 90%, 60%, .9),
+    0 0 16px hsla(var(--hue, 45), 90%, 60%, .7);
+  animation:fireworkBurst 1.4s ease-out forwards
+}
+.firework::before{
+  content:"";
+  position:absolute;
+  inset:-6px;
+  border-radius:50%;
+  border:2px solid hsla(var(--hue, 45), 90%, 60%, .65);
+  animation:fireworkRing 1.4s ease-out forwards
+}
+@keyframes fireworkBurst{
+  0%{transform:scale(.4);opacity:0}
+  30%{transform:scale(1);opacity:1}
+  100%{transform:scale(1.6);opacity:0}
+}
+@keyframes fireworkRing{
+  0%{transform:scale(.3);opacity:.9}
+  100%{transform:scale(2.2);opacity:0}
+}
 
 .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:14px}
 @media(max-width:900px){.grid{grid-template-columns:repeat(4,1fr)}}

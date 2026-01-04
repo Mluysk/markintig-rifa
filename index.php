@@ -44,6 +44,8 @@ $whatsappLink = $whatsappNumero ? "https://wa.me/" . $whatsappNumero : "";
       <div class="winner-title">Número sorteado</div>
       <div id="winnerContent" class="winner-content"></div>
     </div>
+    <div class="fireworks fireworks-left" id="fireworksLeft" hidden></div>
+    <div class="fireworks fireworks-right" id="fireworksRight" hidden></div>
 
     <div class="card">
       <div class="card-title">Cadastre para comprar a rifa</div>
@@ -249,10 +251,13 @@ document.getElementById("nextPage").addEventListener("click", () => {
 function renderWinner(winner){
   const card = document.getElementById("winnerCard");
   const content = document.getElementById("winnerContent");
+  const fireworksLeft = document.getElementById("fireworksLeft");
+  const fireworksRight = document.getElementById("fireworksRight");
   const list = (winner && winner.winners) ? winner.winners : [];
   if(!list.length){
     card.hidden = true;
     content.innerHTML = "";
+    stopFireworks();
     return;
   }
   card.hidden = false;
@@ -266,6 +271,54 @@ function renderWinner(winner){
       </div>
     </div>
   `).join("");
+  fireworksLeft.hidden = false;
+  fireworksRight.hidden = false;
+  startFireworks();
+}
+
+let fireworksInterval = null;
+function createFirework(container){
+  const firework = document.createElement("span");
+  firework.className = "firework";
+  const offset = 10 + Math.random() * 70;
+  firework.style.top = `${offset}%`;
+  firework.style.left = `${20 + Math.random() * 60}%`;
+  firework.style.setProperty("--hue", Math.floor(Math.random() * 360));
+  container.appendChild(firework);
+  setTimeout(() => firework.remove(), 1400);
+}
+
+function startFireworks(){
+  if(fireworksInterval){
+    return;
+  }
+  fireworksInterval = setInterval(() => {
+    const left = document.getElementById("fireworksLeft");
+    const right = document.getElementById("fireworksRight");
+    if(left && !left.hidden){
+      createFirework(left);
+    }
+    if(right && !right.hidden){
+      createFirework(right);
+    }
+  }, 900);
+}
+
+function stopFireworks(){
+  const left = document.getElementById("fireworksLeft");
+  const right = document.getElementById("fireworksRight");
+  if(left){
+    left.hidden = true;
+    left.innerHTML = "";
+  }
+  if(right){
+    right.hidden = true;
+    right.innerHTML = "";
+  }
+  if(fireworksInterval){
+    clearInterval(fireworksInterval);
+    fireworksInterval = null;
+  }
 }
 async function loadWinner(){
   try{
