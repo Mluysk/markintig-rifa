@@ -77,6 +77,8 @@ let hasWinner = false;
 let passwordOk = false;
 let confettiRunning = false;
 let confettiShown = false;
+let lastWinnerNumber = null;
+let loadingWinner = false;
 const drawTime = <?= json_encode($cfg["sorteio_hora"] ?? "19:00") ?>;
 
 document.getElementById("openPrizeModal").addEventListener("click", () => {
@@ -93,11 +95,17 @@ function renderWinner(winner){
   winnerPrizeEl.hidden = !winner;
   if(!winner){
     confettiShown = false;
+    lastWinnerNumber = null;
     resultEl.hidden = true;
     updateDrawButton();
     return;
   }
-  confettiShown = true;
+  if(loadingWinner){
+    confettiShown = true;
+  }else if(lastWinnerNumber !== winner.num){
+    confettiShown = false;
+  }
+  lastWinnerNumber = winner.num;
   resultEl.hidden = false;
   winnerNumberEl.textContent = `#${String(winner.num).padStart(4,"0")}`;
   winnerInfoEl.innerHTML = `
@@ -110,11 +118,15 @@ function renderWinner(winner){
 
 async function loadWinner(){
   try{
+    loadingWinner = true;
     const r = await fetch("api.php?action=winner", { cache:"no-store" });
     const j = await r.json();
     const list = j.winner && j.winner.winners ? j.winner.winners : [];
     renderWinner(list[0]);
   }catch(e){}
+  finally{
+    loadingWinner = false;
+  }
 }
 async function loadStatus(){
   try{
