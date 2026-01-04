@@ -278,6 +278,7 @@ function renderWinner(winner){
 
 let fireworksInterval = null;
 const fireworksIntensity = Math.max(1, Number(<?= json_encode($cfg["fogos_intensidade"] ?? 2) ?>) || 1);
+const fireworksIntervalMs = Math.max(300, Number(<?= json_encode($cfg["fogos_intervalo_ms"] ?? 1200) ?>) || 1200);
 
 function createExplosion(container, x, y, hue){
   const explosion = document.createElement("span");
@@ -325,17 +326,18 @@ function startFireworks(){
   fireworksInterval = setInterval(() => {
     const left = document.getElementById("fireworksLeft");
     const right = document.getElementById("fireworksRight");
-    if(left && !left.hidden){
-      for(let i=0; i<fireworksIntensity; i+=1){
-        createFirework(left);
+    const maxBursts = Math.max(1, fireworksIntensity);
+    const step = Math.max(120, Math.floor(fireworksIntervalMs / (maxBursts + 1)));
+    for(let i=0; i<maxBursts; i+=1){
+      const delay = i * step;
+      if(left && !left.hidden){
+        setTimeout(() => createFirework(left), delay);
+      }
+      if(right && !right.hidden){
+        setTimeout(() => createFirework(right), delay + Math.floor(step / 2));
       }
     }
-    if(right && !right.hidden){
-      for(let i=0; i<fireworksIntensity; i+=1){
-        createFirework(right);
-      }
-    }
-  }, 1200);
+  }, fireworksIntervalMs);
 }
 
 function stopFireworks(){
