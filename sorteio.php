@@ -49,6 +49,9 @@ $drawPassword = (string)($cfg["sorteio_senha"] ?? "9899");
       </div>
       <button id="clearWinnerBtn" class="btn btn-outline" type="button" hidden>Limpar ganhador</button>
     </div>
+
+    <div class="fireworks fireworks-left" id="drawFireworksLeft" hidden></div>
+    <div class="fireworks fireworks-right" id="drawFireworksRight" hidden></div>
   </div>
 
   <div class="modal" id="prizeModal" hidden>
@@ -80,6 +83,9 @@ let confettiShown = false;
 let lastWinnerNumber = null;
 let loadingWinner = false;
 const drawTime = <?= json_encode($cfg["sorteio_hora"] ?? "19:00") ?>;
+const fireworksIntensity = Math.max(1, Number(<?= json_encode($cfg["fogos_intensidade"] ?? 2) ?>) || 1);
+const fireworksIntervalMs = Math.max(300, Number(<?= json_encode($cfg["fogos_intervalo_ms"] ?? 1200) ?>) || 1200);
+let fireworksInterval = null;
 
 document.getElementById("openPrizeModal").addEventListener("click", () => {
   document.getElementById("prizeModal").hidden = false;
@@ -97,6 +103,7 @@ function renderWinner(winner){
     confettiShown = false;
     lastWinnerNumber = null;
     resultEl.hidden = true;
+    stopFireworks();
     updateDrawButton();
     return;
   }
@@ -113,7 +120,91 @@ function renderWinner(winner){
     <div>CPF: ${winner.cpf}</div>
     ${winner.whatsapp ? `<div>WhatsApp: ${winner.whatsapp}</div>` : ""}
   `;
+  startFireworks();
   updateDrawButton();
+}
+
+function createExplosion(container, x, y, hue){
+  const explosion = document.createElement("span");
+  explosion.className = "firework-explosion";
+  explosion.style.left = `${x}%`;
+  explosion.style.top = `${y}%`;
+  const particles = 14 + Math.floor(Math.random() * 6);
+  for(let i=0; i<particles; i+=1){
+    const particle = document.createElement("span");
+    particle.className = "firework-particle";
+    const angle = (Math.PI * 2 * i) / particles;
+    const distance = 40 + Math.random() * 45;
+    const dx = Math.cos(angle) * distance;
+    const dy = Math.sin(angle) * distance;
+    particle.style.setProperty("--dx", `${dx}px`);
+    particle.style.setProperty("--dy", `${dy}px`);
+    particle.style.setProperty("--hue", hue);
+    explosion.appendChild(particle);
+  }
+  container.appendChild(explosion);
+  setTimeout(() => explosion.remove(), 1200);
+}
+
+function createFirework(container){
+  const hue = Math.floor(Math.random() * 360);
+  const rocket = document.createElement("span");
+  rocket.className = "firework-rocket";
+  const x = 10 + Math.random() * 80;
+  const rise = 220 + Math.random() * 120;
+  rocket.style.left = `${x}%`;
+  rocket.style.setProperty("--hue", hue);
+  rocket.style.setProperty("--rise", `${rise}px`);
+  container.appendChild(rocket);
+  setTimeout(() => {
+    rocket.remove();
+    const y = 20 + Math.random() * 40;
+    createExplosion(container, x, y, hue);
+  }, 900);
+}
+
+function startFireworks(){
+  if(fireworksInterval){
+    return;
+  }
+  const left = document.getElementById("drawFireworksLeft");
+  const right = document.getElementById("drawFireworksRight");
+  if(left){
+    left.hidden = false;
+  }
+  if(right){
+    right.hidden = false;
+  }
+  fireworksInterval = setInterval(() => {
+    const maxBursts = Math.max(1, fireworksIntensity);
+    const step = Math.max(120, Math.floor(fireworksIntervalMs / (maxBursts + 1)));
+    for(let i=0; i<maxBursts; i+=1){
+      const delay = i * step;
+      if(left && !left.hidden){
+        setTimeout(() => createFirework(left), delay);
+      }
+      if(right && !right.hidden){
+        setTimeout(() => createFirework(right), delay + Math.floor(step / 2));
+      }
+    }
+  }, fireworksIntervalMs);
+}
+
+function stopFireworks(){
+  const left = document.getElementById("drawFireworksLeft");
+  const right = document.getElementById("drawFireworksRight");
+  if(left){
+    left.hidden = true;
+    left.innerHTML = "";
+  }
+  if(right){
+    right.hidden = true;
+    right.innerHTML = "";
+  }
+  if(fireworksInterval){
+    clearInterval(fireworksInterval);
+    fireworksInterval = null;
+  }
 }
 
 async function loadWinner(){
