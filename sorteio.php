@@ -97,6 +97,7 @@ function renderWinner(winner){
     updateDrawButton();
     return;
   }
+  confettiShown = true;
   resultEl.hidden = false;
   winnerNumberEl.textContent = `#${String(winner.num).padStart(4,"0")}`;
   winnerInfoEl.innerHTML = `
@@ -169,7 +170,7 @@ function launchConfetti(target){
 }
 
 drawBtn.addEventListener("click", async () => {
-  if(!raffleOpen){
+  if(!raffleOpen || hasWinner){
     return;
   }
   drawBtn.disabled = true;
@@ -192,6 +193,7 @@ drawBtn.addEventListener("click", async () => {
         const j = await r.json();
         const list = j.winner && j.winner.winners ? j.winner.winners : [];
         if(list.length){
+          confettiShown = false;
           renderWinner(list[0]);
           launchConfetti(resultEl);
         }
