@@ -36,19 +36,18 @@ $drawPassword = (string)($cfg["sorteio_senha"] ?? "9899");
         <div class="draw-number" id="winnerNumber"></div>
         <div class="draw-info" id="winnerInfo"></div>
       </div>
-      <button id="clearWinnerBtn" class="btn btn-outline" type="button" hidden>Limpar ganhador</button>
-    </div>
-
-    <div class="prize draw-prize" id="winnerPrize" hidden>
-      <div class="prize-content">
-        <img src="img/premio.png" alt="Prêmio">
-        <div class="prize-text">
-          <div class="prize-title">Prêmio</div>
-          <div class="prize-desc"><?= htmlspecialchars($cfg["premio_descricao"]) ?></div>
-          <div class="prize-value"><?= htmlspecialchars($cfg["premio_valor"]) ?></div>
-          <button class="btn btn-outline btn-small" id="openPrizeModal" type="button">Ver foto ampliada</button>
+      <div class="prize draw-prize" id="winnerPrize" hidden>
+        <div class="prize-content">
+          <img src="img/premio.png" alt="Prêmio">
+          <div class="prize-text">
+            <div class="prize-title">Prêmio</div>
+            <div class="prize-desc"><?= htmlspecialchars($cfg["premio_descricao"]) ?></div>
+            <div class="prize-value"><?= htmlspecialchars($cfg["premio_valor"]) ?></div>
+            <button class="btn btn-outline btn-small" id="openPrizeModal" type="button">Ver foto ampliada</button>
+          </div>
         </div>
       </div>
+      <button id="clearWinnerBtn" class="btn btn-outline" type="button" hidden>Limpar ganhador</button>
     </div>
   </div>
 
@@ -77,6 +76,7 @@ let raffleReset = false;
 let hasWinner = false;
 let passwordOk = false;
 let confettiRunning = false;
+let confettiShown = false;
 const drawTime = <?= json_encode($cfg["sorteio_hora"] ?? "19:00") ?>;
 
 document.getElementById("openPrizeModal").addEventListener("click", () => {
@@ -92,6 +92,7 @@ function renderWinner(winner){
   hasWinner = !!winner;
   winnerPrizeEl.hidden = !winner;
   if(!winner){
+    confettiShown = false;
     resultEl.hidden = true;
     return;
   }
@@ -143,10 +144,11 @@ function updateDrawButton(){
 }
 
 function launchConfetti(target){
-  if(confettiRunning){
+  if(confettiRunning || confettiShown){
     return;
   }
   confettiRunning = true;
+  confettiShown = true;
   const container = document.createElement("div");
   container.className = "confetti";
   for(let i=0;i<28;i+=1){
