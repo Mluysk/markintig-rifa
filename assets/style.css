@@ -175,33 +175,53 @@ button:hover{background:rgba(255,255,255,.10)}
 }
 .fireworks-left{left:0}
 .fireworks-right{right:0}
-.firework{
+.firework-rocket{
   position:absolute;
+  bottom:-20px;
+  width:4px;
+  height:18px;
+  border-radius:999px;
+  background:linear-gradient(180deg, transparent, rgba(255,255,255,.85));
+  box-shadow:0 0 10px hsla(var(--hue, 45), 90%, 65%, .85);
+  animation:fireworkLaunch 0.9s ease-out forwards
+}
+.firework-rocket::after{
+  content:"";
+  position:absolute;
+  top:14px;
+  left:50%;
   width:6px;
   height:6px;
   border-radius:50%;
-  background:hsl(var(--hue, 45), 90%, 60%);
-  box-shadow:
-    0 0 8px hsla(var(--hue, 45), 90%, 60%, .9),
-    0 0 16px hsla(var(--hue, 45), 90%, 60%, .7);
-  animation:fireworkBurst 1.4s ease-out forwards
+  transform:translateX(-50%);
+  background:hsla(var(--hue, 45), 90%, 65%, .9);
+  box-shadow:0 0 8px hsla(var(--hue, 45), 90%, 65%, .9)
 }
-.firework::before{
-  content:"";
+.firework-explosion{
   position:absolute;
-  inset:-6px;
+  width:8px;
+  height:8px;
+  transform:translate(-50%, -50%);
+  pointer-events:none
+}
+.firework-particle{
+  position:absolute;
+  width:4px;
+  height:4px;
   border-radius:50%;
-  border:2px solid hsla(var(--hue, 45), 90%, 60%, .65);
-  animation:fireworkRing 1.4s ease-out forwards
+  background:hsla(var(--hue, 45), 90%, 65%, .95);
+  box-shadow:0 0 8px hsla(var(--hue, 45), 90%, 65%, .85);
+  animation:fireworkParticle 1.1s ease-out forwards;
+  transform:translate(0, 0)
 }
-@keyframes fireworkBurst{
-  0%{transform:scale(.4);opacity:0}
-  30%{transform:scale(1);opacity:1}
-  100%{transform:scale(1.6);opacity:0}
+@keyframes fireworkLaunch{
+  0%{transform:translateY(0) scale(.8);opacity:.4}
+  60%{opacity:1}
+  100%{transform:translateY(calc(-1 * var(--rise, 260px))) scale(1);opacity:0}
 }
-@keyframes fireworkRing{
-  0%{transform:scale(.3);opacity:.9}
-  100%{transform:scale(2.2);opacity:0}
+@keyframes fireworkParticle{
+  0%{transform:translate(0,0) scale(1);opacity:1}
+  100%{transform:translate(var(--dx), var(--dy)) scale(.4);opacity:0}
 }
 
 .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:14px}

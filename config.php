@@ -11,6 +11,7 @@ return [
   "sorteio_quantidade" => 1,
   "sorteio_senha" => "9899",
   "sorteio_hora" => "19:00",
+  "fogos_intensidade" => 2,
 
   // PIX (payload + QR)
   "pix_chave"  => "SUA_CHAVE_PIX_AQUI",  // EVP/email/telefone/CNPJ

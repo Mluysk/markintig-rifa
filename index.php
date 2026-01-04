@@ -277,15 +277,45 @@ function renderWinner(winner){
 }
 
 let fireworksInterval = null;
+const fireworksIntensity = Math.max(1, Number(<?= json_encode($cfg["fogos_intensidade"] ?? 2) ?>) || 1);
+
+function createExplosion(container, x, y, hue){
+  const explosion = document.createElement("span");
+  explosion.className = "firework-explosion";
+  explosion.style.left = `${x}%`;
+  explosion.style.top = `${y}%`;
+  const particles = 14 + Math.floor(Math.random() * 6);
+  for(let i=0; i<particles; i+=1){
+    const particle = document.createElement("span");
+    particle.className = "firework-particle";
+    const angle = (Math.PI * 2 * i) / particles;
+    const distance = 40 + Math.random() * 45;
+    const dx = Math.cos(angle) * distance;
+    const dy = Math.sin(angle) * distance;
+    particle.style.setProperty("--dx", `${dx}px`);
+    particle.style.setProperty("--dy", `${dy}px`);
+    particle.style.setProperty("--hue", hue);
+    explosion.appendChild(particle);
+  }
+  container.appendChild(explosion);
+  setTimeout(() => explosion.remove(), 1200);
+}
+
 function createFirework(container){
-  const firework = document.createElement("span");
-  firework.className = "firework";
-  const offset = 10 + Math.random() * 70;
-  firework.style.top = `${offset}%`;
-  firework.style.left = `${20 + Math.random() * 60}%`;
-  firework.style.setProperty("--hue", Math.floor(Math.random() * 360));
-  container.appendChild(firework);
-  setTimeout(() => firework.remove(), 1400);
+  const hue = Math.floor(Math.random() * 360);
+  const rocket = document.createElement("span");
+  rocket.className = "firework-rocket";
+  const x = 10 + Math.random() * 80;
+  const rise = 220 + Math.random() * 120;
+  rocket.style.left = `${x}%`;
+  rocket.style.setProperty("--hue", hue);
+  rocket.style.setProperty("--rise", `${rise}px`);
+  container.appendChild(rocket);
+  setTimeout(() => {
+    rocket.remove();
+    const y = 20 + Math.random() * 40;
+    createExplosion(container, x, y, hue);
+  }, 900);
 }
 
 function startFireworks(){
@@ -296,12 +326,16 @@ function startFireworks(){
     const left = document.getElementById("fireworksLeft");
     const right = document.getElementById("fireworksRight");
     if(left && !left.hidden){
-      createFirework(left);
+      for(let i=0; i<fireworksIntensity; i+=1){
+        createFirework(left);
+      }
     }
     if(right && !right.hidden){
-      createFirework(right);
+      for(let i=0; i<fireworksIntensity; i+=1){
+        createFirework(right);
+      }
     }
-  }, 900);
+  }, 1200);
 }
 
 function stopFireworks(){
