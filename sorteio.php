@@ -172,6 +172,7 @@ drawBtn.addEventListener("click", async () => {
   }
   drawBtn.disabled = true;
   resultEl.hidden = true;
+  winnerPrizeEl.hidden = true;
   let remaining = 5;
   countdownEl.hidden = false;
   const tick = async () => {
