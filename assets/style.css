@@ -373,6 +373,11 @@ textarea{width:100%;min-height:110px;resize:vertical}
   max-width:520px;
   position:relative
 }
+.draw-prize{
+  align-self:center;
+  width:100%;
+  max-width:520px
+}
 .draw-number{
   font-size:48px;
   font-weight:800;

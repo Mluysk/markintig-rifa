@@ -10,6 +10,7 @@ return [
   "whatsapp_numero" => "5511999999999",
   "sorteio_quantidade" => 1,
   "sorteio_senha" => "9899",
+  "sorteio_hora" => "19:00",
 
   // PIX (payload + QR)
   "pix_chave"  => "SUA_CHAVE_PIX_AQUI",  // EVP/email/telefone/CNPJ

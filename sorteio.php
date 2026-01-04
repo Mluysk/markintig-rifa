@@ -18,17 +18,6 @@ $drawPassword = (string)($cfg["sorteio_senha"] ?? "9899");
         <p class="sub">Clique em sortear para gerar o número vencedor.</p>
       </div>
       <div class="title-actions">
-        <div class="prize">
-          <div class="prize-content">
-            <img src="img/premio.png" alt="Prêmio">
-            <div class="prize-text">
-              <div class="prize-title">Prêmio</div>
-              <div class="prize-desc"><?= htmlspecialchars($cfg["premio_descricao"]) ?></div>
-              <div class="prize-value"><?= htmlspecialchars($cfg["premio_valor"]) ?></div>
-              <button class="btn btn-outline btn-small" id="openPrizeModal" type="button">Ver foto ampliada</button>
-            </div>
-          </div>
-        </div>
         <div class="action-buttons">
           <a class="btn btn-outline" href="index.php">Voltar</a>
         </div>
@@ -48,6 +37,18 @@ $drawPassword = (string)($cfg["sorteio_senha"] ?? "9899");
         <div class="draw-info" id="winnerInfo"></div>
       </div>
       <button id="clearWinnerBtn" class="btn btn-outline" type="button" hidden>Limpar ganhador</button>
+    </div>
+
+    <div class="prize draw-prize" id="winnerPrize" hidden>
+      <div class="prize-content">
+        <img src="img/premio.png" alt="Prêmio">
+        <div class="prize-text">
+          <div class="prize-title">Prêmio</div>
+          <div class="prize-desc"><?= htmlspecialchars($cfg["premio_descricao"]) ?></div>
+          <div class="prize-value"><?= htmlspecialchars($cfg["premio_valor"]) ?></div>
+          <button class="btn btn-outline btn-small" id="openPrizeModal" type="button">Ver foto ampliada</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -69,11 +70,14 @@ const drawStatusEl = document.getElementById("drawStatus");
 const clearWinnerBtn = document.getElementById("clearWinnerBtn");
 const drawPasswordEl = document.getElementById("drawPassword");
 const unlockBtn = document.getElementById("unlockBtn");
+const winnerPrizeEl = document.getElementById("winnerPrize");
 const effects = ["effect-1","effect-2","effect-3","effect-4","effect-5"];
 let raffleOpen = false;
 let raffleReset = false;
 let hasWinner = false;
 let passwordOk = false;
+let confettiRunning = false;
+const drawTime = <?= json_encode($cfg["sorteio_hora"] ?? "19:00") ?>;
 
 document.getElementById("openPrizeModal").addEventListener("click", () => {
   document.getElementById("prizeModal").hidden = false;
@@ -86,6 +90,7 @@ document.getElementById("prizeModal").addEventListener("click", (e) => {
 
 function renderWinner(winner){
   hasWinner = !!winner;
+  winnerPrizeEl.hidden = !winner;
   if(!winner){
     resultEl.hidden = true;
     return;
@@ -118,9 +123,14 @@ async function loadStatus(){
     raffleReset = remaining === total && total > 0;
     updateDrawButton();
     drawStatusEl.className = `draw-status ${raffleOpen ? "open" : "locked"}`;
-    drawStatusEl.textContent = raffleOpen
-      ? "Sorteio liberado"
-      : `Sorteio bloqueado • Restam ${remaining} de ${total}`;
+    if(raffleOpen){
+      const drawDate = new Date();
+      drawDate.setDate(drawDate.getDate() + 1);
+      const dateLabel = drawDate.toLocaleDateString("pt-BR");
+      drawStatusEl.textContent = `Sorteio liberado • Data do sorteio: ${dateLabel} ${drawTime}`;
+    }else{
+      drawStatusEl.textContent = `Sorteio bloqueado • Restam ${remaining} de ${total}`;
+    }
     updateClearButton();
   }catch(e){}
 }
@@ -133,6 +143,10 @@ function updateDrawButton(){
 }
 
 function launchConfetti(target){
+  if(confettiRunning){
+    return;
+  }
+  confettiRunning = true;
   const container = document.createElement("div");
   container.className = "confetti";
   for(let i=0;i<28;i+=1){
@@ -144,7 +158,10 @@ function launchConfetti(target){
     container.appendChild(piece);
   }
   target.appendChild(container);
-  setTimeout(() => container.remove(), 1400);
+  setTimeout(() => {
+    confettiRunning = false;
+    container.remove();
+  }, 1400);
 }
 
 drawBtn.addEventListener("click", async () => {
