@@ -25,6 +25,9 @@ return [
     333 => 80,
     444 => 80
   ],
+  "limpar_ganhador_ativo" => true,
+  "limpar_ganhador_senha" => "4321",
+  "limpar_ganhador_auto_dias" => 7,
 
   // PIX (payload + QR)
   "pix_chave"  => "SUA_CHAVE_PIX_AQUI",  // EVP/email/telefone/CNPJ

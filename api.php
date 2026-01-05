@@ -62,6 +62,23 @@ function winner_write($winnerFile, $data){
   @file_put_contents($winnerFile, json_encode($data, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT));
 }
 
+function maybe_clear_winner($cfg, $winnerFile){
+  $data = winner_read($winnerFile);
+  if (empty($data) || empty($data["drawn_at"])) {
+    return $data;
+  }
+  $days = (int)($cfg["limpar_ganhador_auto_dias"] ?? 0);
+  if ($days <= 0) {
+    return $data;
+  }
+  $cutoff = time() - ($days * 86400);
+  if ((int)$data["drawn_at"] <= $cutoff) {
+    winner_write($winnerFile, []);
+    return [];
+  }
+  return $data;
+}
+
 function ensure_initialized(&$arr, $cfg){
   $min = (int)$cfg["min_num"];
   $max = (int)$cfg["max_num"];
@@ -192,7 +209,7 @@ if ($action === "check_paid") {
 }
 
 if ($action === "winner") {
-  $winner = winner_read($winnerFile);
+  $winner = maybe_clear_winner($cfg, $winnerFile);
   echo json_encode(["ok"=>true,"winner"=>$winner], JSON_UNESCAPED_UNICODE);
   exit;
 }
@@ -425,6 +442,19 @@ if ($action === "paid_by_txid") {
 }
 
 if ($action === "clear_winner") {
+  if (empty($cfg["limpar_ganhador_ativo"])) {
+    http_response_code(403);
+    echo json_encode(["ok"=>false,"error"=>"Limpeza desativada"], JSON_UNESCAPED_UNICODE);
+    exit;
+  }
+  $body = json_decode(file_get_contents("php://input"), true) ?: [];
+  $pwd = trim((string)($body["password"] ?? ""));
+  $expected = (string)($cfg["limpar_ganhador_senha"] ?? "");
+  if ($expected === "" || !hash_equals($expected, $pwd)) {
+    http_response_code(403);
+    echo json_encode(["ok"=>false,"error"=>"Senha inválida"], JSON_UNESCAPED_UNICODE);
+    exit;
+  }
   winner_write($winnerFile, []);
   echo json_encode(["ok"=>true], JSON_UNESCAPED_UNICODE);
   exit;

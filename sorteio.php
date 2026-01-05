@@ -1,6 +1,8 @@
 <?php
 $cfg = require __DIR__ . "/config.php";
 $drawPassword = (string)($cfg["sorteio_senha"] ?? "9899");
+$clearWinnerEnabled = !empty($cfg["limpar_ganhador_ativo"]);
+$clearWinnerPassword = (string)($cfg["limpar_ganhador_senha"] ?? "");
 ?>
 <!doctype html>
 <html lang="pt-BR">
@@ -83,6 +85,8 @@ let confettiShown = false;
 let lastWinnerNumber = null;
 let loadingWinner = false;
 const drawTime = <?= json_encode($cfg["sorteio_hora"] ?? "19:00") ?>;
+const clearWinnerEnabled = <?= json_encode($clearWinnerEnabled) ?>;
+const clearWinnerPasswordEnabled = <?= json_encode($clearWinnerPassword !== "") ?>;
 const fireworksIntensity = Math.max(1, Number(<?= json_encode($cfg["fogos_intensidade"] ?? 2) ?>) || 1);
 const fireworksIntervalMs = Math.max(300, Number(<?= json_encode($cfg["fogos_intervalo_ms"] ?? 1200) ?>) || 1200);
 let fireworksInterval = null;
@@ -243,7 +247,7 @@ async function loadStatus(){
 }
 
 function updateClearButton(){
-  clearWinnerBtn.hidden = !(hasWinner && raffleReset);
+  clearWinnerBtn.hidden = !(clearWinnerEnabled && hasWinner && raffleReset);
 }
 function updateDrawButton(){
   drawBtn.disabled = !(raffleOpen && passwordOk && !hasWinner);
@@ -311,22 +315,26 @@ drawBtn.addEventListener("click", async () => {
 });
 
 clearWinnerBtn.addEventListener("click", async () => {
-  const pwd = (drawPasswordEl.value || "").trim();
-  if(pwd !== <?= json_encode($drawPassword) ?>){
-    alert("Senha inválida.");
+  if(!clearWinnerEnabled){
     return;
+  }
+  let pwd = "";
+  if(clearWinnerPasswordEnabled){
+    pwd = (window.prompt("Senha para limpar ganhador:") || "").trim();
   }
   try{
     const r = await fetch("api.php?action=clear_winner", {
       method: "POST",
       headers: { "Content-Type":"application/json" },
-      body: JSON.stringify({})
+      body: JSON.stringify({ password: pwd })
     });
     const j = await r.json();
     if(j.ok){
       renderWinner(null);
       updateClearButton();
+      return;
     }
+    alert(j.error || "Não foi possível limpar o ganhador.");
   }catch(e){}
 });
 
