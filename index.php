@@ -249,13 +249,10 @@ document.getElementById("nextPage").addEventListener("click", () => {
 });
 
 let lastWinnerNumberMain = null;
-let winnerConfettiShown = false;
+let winnerConfettiInterval = null;
+const confettiIntervalMs = Math.max(300, Number(<?= json_encode($cfg["confete_intervalo_ms"] ?? 1000) ?>) || 1000);
 
 function launchWinnerConfetti(target){
-  if(winnerConfettiShown){
-    return;
-  }
-  winnerConfettiShown = true;
   const container = document.createElement("div");
   container.className = "confetti";
   for(let i=0;i<28;i+=1){
@@ -270,6 +267,23 @@ function launchWinnerConfetti(target){
   setTimeout(() => container.remove(), 1400);
 }
 
+function startWinnerConfetti(target){
+  if(winnerConfettiInterval){
+    return;
+  }
+  launchWinnerConfetti(target);
+  winnerConfettiInterval = setInterval(() => {
+    launchWinnerConfetti(target);
+  }, confettiIntervalMs);
+}
+
+function stopWinnerConfetti(){
+  if(winnerConfettiInterval){
+    clearInterval(winnerConfettiInterval);
+    winnerConfettiInterval = null;
+  }
+}
+
 function renderWinner(winner){
   const card = document.getElementById("winnerCard");
   const content = document.getElementById("winnerContent");
@@ -280,15 +294,12 @@ function renderWinner(winner){
     card.hidden = true;
     content.innerHTML = "";
     lastWinnerNumberMain = null;
-    winnerConfettiShown = false;
+    stopWinnerConfetti();
     stopFireworks();
     return;
   }
   card.hidden = false;
   const firstWinner = list[0];
-  if(lastWinnerNumberMain !== firstWinner.num){
-    winnerConfettiShown = false;
-  }
   lastWinnerNumberMain = firstWinner.num;
   content.innerHTML = `
     <div class="winner-message">PARABÊNS PELA CONQUISTA.!!!</div>
@@ -306,7 +317,7 @@ function renderWinner(winner){
   fireworksLeft.hidden = false;
   fireworksRight.hidden = false;
   startFireworks();
-  launchWinnerConfetti(card);
+  startWinnerConfetti(card);
 }
 
 let fireworksInterval = null;

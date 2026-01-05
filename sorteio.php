@@ -81,12 +81,13 @@ let raffleReset = false;
 let hasWinner = false;
 let passwordOk = false;
 let confettiRunning = false;
-let confettiShown = false;
+let confettiInterval = null;
 let lastWinnerNumber = null;
 let loadingWinner = false;
 const drawTime = <?= json_encode($cfg["sorteio_hora"] ?? "19:00") ?>;
 const clearWinnerEnabled = <?= json_encode($clearWinnerEnabled) ?>;
 const clearWinnerPasswordEnabled = <?= json_encode($clearWinnerPassword !== "") ?>;
+const confettiIntervalMs = Math.max(300, Number(<?= json_encode($cfg["confete_intervalo_ms"] ?? 1000) ?>) || 1000);
 const fireworksIntensity = Math.max(1, Number(<?= json_encode($cfg["fogos_intensidade"] ?? 2) ?>) || 1);
 const fireworksIntervalMs = Math.max(300, Number(<?= json_encode($cfg["fogos_intervalo_ms"] ?? 1200) ?>) || 1200);
 let fireworksInterval = null;
@@ -104,17 +105,12 @@ function renderWinner(winner){
   hasWinner = !!winner;
   winnerPrizeEl.hidden = !winner;
   if(!winner){
-    confettiShown = false;
     lastWinnerNumber = null;
     resultEl.hidden = true;
+    stopConfetti();
     stopFireworks();
     updateDrawButton();
     return;
-  }
-  if(loadingWinner){
-    confettiShown = true;
-  }else if(lastWinnerNumber !== winner.num){
-    confettiShown = false;
   }
   lastWinnerNumber = winner.num;
   resultEl.hidden = false;
@@ -125,6 +121,7 @@ function renderWinner(winner){
     ${winner.whatsapp ? `<div>WhatsApp: ${winner.whatsapp}</div>` : ""}
   `;
   startFireworks();
+  startConfetti(resultEl);
   updateDrawButton();
 }
 
@@ -254,11 +251,10 @@ function updateDrawButton(){
 }
 
 function launchConfetti(target){
-  if(confettiRunning || confettiShown){
+  if(confettiRunning){
     return;
   }
   confettiRunning = true;
-  confettiShown = true;
   const container = document.createElement("div");
   container.className = "confetti";
   for(let i=0;i<28;i+=1){
@@ -274,6 +270,21 @@ function launchConfetti(target){
     confettiRunning = false;
     container.remove();
   }, 1400);
+}
+
+function startConfetti(target){
+  if(confettiInterval){
+    return;
+  }
+  launchConfetti(target);
+  confettiInterval = setInterval(() => launchConfetti(target), confettiIntervalMs);
+}
+
+function stopConfetti(){
+  if(confettiInterval){
+    clearInterval(confettiInterval);
+    confettiInterval = null;
+  }
 }
 
 drawBtn.addEventListener("click", async () => {
@@ -300,9 +311,7 @@ drawBtn.addEventListener("click", async () => {
         const j = await r.json();
         const list = j.winner && j.winner.winners ? j.winner.winners : [];
         if(list.length){
-          confettiShown = false;
           renderWinner(list[0]);
-          launchConfetti(resultEl);
         }
       }catch(e){}
       drawBtn.disabled = false;
