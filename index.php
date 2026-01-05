@@ -250,7 +250,8 @@ document.getElementById("nextPage").addEventListener("click", () => {
 
 let lastWinnerNumberMain = null;
 let winnerConfettiInterval = null;
-const confettiIntervalMs = Math.max(300, Number(<?= json_encode($cfg["confete_intervalo_ms"] ?? 1000) ?>) || 1000);
+const confettiDurationMs = Math.max(400, Number(<?= json_encode($cfg["confete_duracao_ms"] ?? 1100) ?>) || 1100);
+const confettiIntervalMs = Math.max(300, Number(<?= json_encode($cfg["confete_intervalo_ms"] ?? ($cfg["confete_duracao_ms"] ?? 1100)) ?>) || confettiDurationMs);
 
 function launchWinnerConfetti(target){
   const container = document.createElement("div");
@@ -263,10 +264,11 @@ function launchWinnerConfetti(target){
     piece.style.left = `${Math.random() * 100}%`;
     piece.style.background = `hsl(${Math.random() * 360}, 90%, 60%)`;
     piece.style.animationDelay = `${Math.random() * 0.2}s`;
+    piece.style.animationDuration = `${confettiDurationMs}ms`;
     container.appendChild(piece);
   }
   target.appendChild(container);
-  setTimeout(() => container.remove(), 1400);
+  setTimeout(() => container.remove(), confettiDurationMs + 200);
 }
 
 function startWinnerConfetti(target){

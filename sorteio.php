@@ -89,7 +89,8 @@ let loadingWinner = false;
 const drawTime = <?= json_encode($cfg["sorteio_hora"] ?? "19:00") ?>;
 const clearWinnerEnabled = <?= json_encode($clearWinnerEnabled) ?>;
 const clearWinnerPasswordEnabled = <?= json_encode($clearWinnerPassword !== "") ?>;
-const confettiIntervalMs = Math.max(300, Number(<?= json_encode($cfg["confete_intervalo_ms"] ?? 1000) ?>) || 1000);
+const confettiDurationMs = Math.max(400, Number(<?= json_encode($cfg["confete_duracao_ms"] ?? 1100) ?>) || 1100);
+const confettiIntervalMs = Math.max(300, Number(<?= json_encode($cfg["confete_intervalo_ms"] ?? ($cfg["confete_duracao_ms"] ?? 1100)) ?>) || confettiDurationMs);
 const fireworksIntensity = Math.max(1, Number(<?= json_encode($cfg["fogos_intensidade"] ?? 2) ?>) || 1);
 const fireworksIntervalMs = Math.max(300, Number(<?= json_encode($cfg["fogos_intervalo_ms"] ?? 1200) ?>) || 1200);
 let fireworksInterval = null;
@@ -271,13 +272,14 @@ function launchConfetti(target){
     piece.style.left = `${Math.random() * 100}%`;
     piece.style.background = `hsl(${Math.random() * 360}, 90%, 60%)`;
     piece.style.animationDelay = `${Math.random() * 0.2}s`;
+    piece.style.animationDuration = `${confettiDurationMs}ms`;
     container.appendChild(piece);
   }
   target.appendChild(container);
   setTimeout(() => {
     confettiRunning = false;
     container.remove();
-  }, 1400);
+  }, confettiDurationMs + 200);
 }
 
 function startConfetti(target){

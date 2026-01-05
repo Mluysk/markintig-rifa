@@ -14,6 +14,7 @@ return [
   "fogos_intensidade" => 2,
   "fogos_intervalo_ms" => 1200,
   "confete_intervalo_ms" => 1000,
+  "confete_duracao_ms" => 1100,
   "numero_da_sorte_ativo" => false,
   "numero_da_sorte" => [
     9 => 80,
