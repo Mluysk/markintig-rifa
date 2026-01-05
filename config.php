@@ -13,6 +13,18 @@ return [
   "sorteio_hora" => "19:00",
   "fogos_intensidade" => 2,
   "fogos_intervalo_ms" => 1200,
+  "numero_da_sorte_ativo" => false,
+  "numero_da_sorte" => [
+    9 => 80,
+    23 => 80,
+    41 => 80,
+    58 => 80,
+    77 => 80,
+    101 => 80,
+    222 => 80,
+    333 => 80,
+    444 => 80
+  ],
 
   // PIX (payload + QR)
   "pix_chave"  => "SUA_CHAVE_PIX_AQUI",  // EVP/email/telefone/CNPJ

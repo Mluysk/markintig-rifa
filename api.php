@@ -109,6 +109,30 @@ function cleanup_reservations(&$arr, $cfg){
   }
 }
 
+function pick_weighted_index(array $items, array $weightsByNum): int {
+  $total = 0.0;
+  $weights = [];
+  foreach ($items as $idx => $item) {
+    $num = (int)($item["num"] ?? 0);
+    $weight = $weightsByNum[$num] ?? 1.0;
+    $weight = max(0.0, (float)$weight);
+    $weights[$idx] = $weight;
+    $total += $weight;
+  }
+  if ($total <= 0 || empty($weights)) {
+    return (int)array_key_first($items);
+  }
+  $rand = (mt_rand() / mt_getrandmax()) * $total;
+  $acc = 0.0;
+  foreach ($weights as $idx => $weight) {
+    $acc += $weight;
+    if ($rand <= $acc) {
+      return (int)$idx;
+    }
+  }
+  return (int)array_key_last($weights);
+}
+
 $action = $_GET["action"] ?? "";
 
 /* ===== GET ===== */
@@ -422,8 +446,31 @@ if ($action === "draw_winner") {
   }
 
   $qty = max(1, (int)($cfg["sorteio_quantidade"] ?? 1));
-  shuffle($eligible);
-  $winners = array_slice($eligible, 0, min($qty, count($eligible)));
+  $weightsByNum = [];
+  if (!empty($cfg["numero_da_sorte_ativo"]) && !empty($cfg["numero_da_sorte"]) && is_array($cfg["numero_da_sorte"])) {
+    foreach ($cfg["numero_da_sorte"] as $num => $percent) {
+      if (!is_numeric($num) || !is_numeric($percent)) {
+        continue;
+      }
+      $weightsByNum[(int)$num] = max(0.0, (float)$percent);
+    }
+  }
+
+  $remaining = array_values($eligible);
+  $winners = [];
+  $limit = min($qty, count($remaining));
+  for ($i = 0; $i < $limit; $i++) {
+    if (empty($remaining)) {
+      break;
+    }
+    if (!empty($weightsByNum)) {
+      $idx = pick_weighted_index($remaining, $weightsByNum);
+    } else {
+      $idx = array_rand($remaining);
+    }
+    $winners[] = $remaining[$idx];
+    array_splice($remaining, (int)$idx, 1);
+  }
   $out = [
     "drawn_at"=>time(),
     "winners"=>array_map(fn($r)=>[
