@@ -341,7 +341,8 @@ textarea{width:100%;min-height:110px;resize:vertical}
 
 .confetti{
   position:absolute;
-  inset:-40px 0 0 0;
+  inset:0;
+  overflow:hidden;
   pointer-events:none;
 }
 .confetti-piece{
@@ -354,7 +355,7 @@ textarea{width:100%;min-height:110px;resize:vertical}
 }
 @keyframes confettiFall{
   0%{transform:translateY(0) rotate(0deg);opacity:1}
-  100%{transform:translateY(60px) rotate(140deg);opacity:0}
+  100%{transform:translateY(var(--confetti-drop, 120px)) rotate(140deg);opacity:0}
 }
 .btn-outline:hover{background:rgba(255,255,255,.10)}
 .btn-small{padding:6px 10px;font-size:12px}

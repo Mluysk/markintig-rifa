@@ -257,6 +257,8 @@ function launchConfetti(target){
   confettiRunning = true;
   const container = document.createElement("div");
   container.className = "confetti";
+  const drop = Math.max(120, target.offsetHeight + 20);
+  container.style.setProperty("--confetti-drop", `${drop}px`);
   for(let i=0;i<28;i+=1){
     const piece = document.createElement("span");
     piece.className = "confetti-piece";
