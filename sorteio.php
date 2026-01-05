@@ -49,7 +49,9 @@ $clearWinnerPassword = (string)($cfg["limpar_ganhador_senha"] ?? "");
           </div>
         </div>
       </div>
+      <?php if ($clearWinnerEnabled) : ?>
       <button id="clearWinnerBtn" class="btn btn-outline" type="button" hidden>Limpar ganhador</button>
+      <?php endif; ?>
     </div>
 
     <div class="fireworks fireworks-left" id="drawFireworksLeft" hidden></div>
@@ -244,6 +246,9 @@ async function loadStatus(){
 }
 
 function updateClearButton(){
+  if(!clearWinnerBtn){
+    return;
+  }
   clearWinnerBtn.hidden = !(clearWinnerEnabled && hasWinner && raffleReset);
 }
 function updateDrawButton(){
@@ -325,10 +330,11 @@ drawBtn.addEventListener("click", async () => {
   tick();
 });
 
-clearWinnerBtn.addEventListener("click", async () => {
-  if(!clearWinnerEnabled){
-    return;
-  }
+if(clearWinnerBtn){
+  clearWinnerBtn.addEventListener("click", async () => {
+    if(!clearWinnerEnabled){
+      return;
+    }
   let pwd = "";
   if(clearWinnerPasswordEnabled){
     pwd = (window.prompt("Senha para limpar ganhador:") || "").trim();
@@ -347,7 +353,8 @@ clearWinnerBtn.addEventListener("click", async () => {
     }
     alert(j.error || "Não foi possível limpar o ganhador.");
   }catch(e){}
-});
+  });
+}
 
 unlockBtn.addEventListener("click", () => {
   const pwd = (drawPasswordEl.value || "").trim();
