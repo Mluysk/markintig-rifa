@@ -112,11 +112,8 @@ $payloadFinal = $payload . "6304" . crc16($payload);
           <div class="small">Assim que o pagamento confirmar, irar aparecer o botão de confirmar o pagamento aguarde para confirmar.</div>
           <div id="confirmTimer" class="small">Você poderá confirmar em 30s.</div>
           <button id="confirmBtn" class="btn-outline confirm-btn" style="display:none;" type="button">Confirmar pagamento</button>
+          <div class="small"><b>⚠️ Não saia desta tela</b> até confirmar o pagamento no botão acima para registrar seus números.</div>
         </div>
-      </div>
-
-      <div class="actions">
-        <a class="btn" href="index.php">Voltar</a>
       </div>
     </div>
   </div>
