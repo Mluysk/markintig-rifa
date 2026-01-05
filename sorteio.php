@@ -118,6 +118,7 @@ function renderWinner(winner){
   resultEl.hidden = false;
   winnerNumberEl.textContent = `#${String(winner.num).padStart(4,"0")}`;
   winnerInfoEl.innerHTML = `
+    <div class="winner-message">PARABÊNS PELA CONQUISTA.!!!</div>
     <div class="winner-name">🏆 ${winner.name}</div>
     <div>CPF: ${winner.cpf}</div>
     ${winner.whatsapp ? `<div>WhatsApp: ${winner.whatsapp}</div>` : ""}
