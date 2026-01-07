@@ -62,6 +62,23 @@ function winner_write($winnerFile, $data){
   @file_put_contents($winnerFile, json_encode($data, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT));
 }
 
+function maybe_clear_winner($cfg, $winnerFile){
+  $data = winner_read($winnerFile);
+  if (empty($data) || empty($data["drawn_at"])) {
+    return $data;
+  }
+  $days = (int)($cfg["limpar_ganhador_auto_dias"] ?? 0);
+  if ($days <= 0) {
+    return $data;
+  }
+  $cutoff = time() - ($days * 86400);
+  if ((int)$data["drawn_at"] <= $cutoff) {
+    winner_write($winnerFile, []);
+    return [];
+  }
+  return $data;
+}
+
 function ensure_initialized(&$arr, $cfg){
   $min = (int)$cfg["min_num"];
   $max = (int)$cfg["max_num"];
@@ -107,6 +124,30 @@ function cleanup_reservations(&$arr, $cfg){
       $r["created_at"]=0;
     }
   }
+}
+
+function pick_weighted_index(array $items, array $weightsByNum): int {
+  $total = 0.0;
+  $weights = [];
+  foreach ($items as $idx => $item) {
+    $num = (int)($item["num"] ?? 0);
+    $weight = $weightsByNum[$num] ?? 1.0;
+    $weight = max(0.0, (float)$weight);
+    $weights[$idx] = $weight;
+    $total += $weight;
+  }
+  if ($total <= 0 || empty($weights)) {
+    return (int)array_key_first($items);
+  }
+  $rand = (mt_rand() / mt_getrandmax()) * $total;
+  $acc = 0.0;
+  foreach ($weights as $idx => $weight) {
+    $acc += $weight;
+    if ($rand <= $acc) {
+      return (int)$idx;
+    }
+  }
+  return (int)array_key_last($weights);
 }
 
 $action = $_GET["action"] ?? "";
@@ -168,7 +209,7 @@ if ($action === "check_paid") {
 }
 
 if ($action === "winner") {
-  $winner = winner_read($winnerFile);
+  $winner = maybe_clear_winner($cfg, $winnerFile);
   echo json_encode(["ok"=>true,"winner"=>$winner], JSON_UNESCAPED_UNICODE);
   exit;
 }
@@ -401,6 +442,19 @@ if ($action === "paid_by_txid") {
 }
 
 if ($action === "clear_winner") {
+  if (empty($cfg["limpar_ganhador_ativo"])) {
+    http_response_code(403);
+    echo json_encode(["ok"=>false,"error"=>"Limpeza desativada"], JSON_UNESCAPED_UNICODE);
+    exit;
+  }
+  $body = json_decode(file_get_contents("php://input"), true) ?: [];
+  $pwd = trim((string)($body["password"] ?? ""));
+  $expected = (string)($cfg["limpar_ganhador_senha"] ?? "");
+  if ($expected === "" || !hash_equals($expected, $pwd)) {
+    http_response_code(403);
+    echo json_encode(["ok"=>false,"error"=>"Senha inválida"], JSON_UNESCAPED_UNICODE);
+    exit;
+  }
   winner_write($winnerFile, []);
   echo json_encode(["ok"=>true], JSON_UNESCAPED_UNICODE);
   exit;
@@ -422,8 +476,31 @@ if ($action === "draw_winner") {
   }
 
   $qty = max(1, (int)($cfg["sorteio_quantidade"] ?? 1));
-  shuffle($eligible);
-  $winners = array_slice($eligible, 0, min($qty, count($eligible)));
+  $weightsByNum = [];
+  if (!empty($cfg["numero_da_sorte_ativo"]) && !empty($cfg["numero_da_sorte"]) && is_array($cfg["numero_da_sorte"])) {
+    foreach ($cfg["numero_da_sorte"] as $num => $percent) {
+      if (!is_numeric($num) || !is_numeric($percent)) {
+        continue;
+      }
+      $weightsByNum[(int)$num] = max(0.0, (float)$percent);
+    }
+  }
+
+  $remaining = array_values($eligible);
+  $winners = [];
+  $limit = min($qty, count($remaining));
+  for ($i = 0; $i < $limit; $i++) {
+    if (empty($remaining)) {
+      break;
+    }
+    if (!empty($weightsByNum)) {
+      $idx = pick_weighted_index($remaining, $weightsByNum);
+    } else {
+      $idx = array_rand($remaining);
+    }
+    $winners[] = $remaining[$idx];
+    array_splice($remaining, (int)$idx, 1);
+  }
   $out = [
     "drawn_at"=>time(),
     "winners"=>array_map(fn($r)=>[

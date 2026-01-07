@@ -44,6 +44,8 @@ $whatsappLink = $whatsappNumero ? "https://wa.me/" . $whatsappNumero : "";
       <div class="winner-title">Número sorteado</div>
       <div id="winnerContent" class="winner-content"></div>
     </div>
+    <div class="fireworks fireworks-left" id="fireworksLeft" hidden></div>
+    <div class="fireworks fireworks-right" id="fireworksRight" hidden></div>
 
     <div class="card">
       <div class="card-title">Cadastre para comprar a rifa</div>
@@ -246,17 +248,66 @@ document.getElementById("nextPage").addEventListener("click", () => {
   renderGrid(currentGrid);
 });
 
+let lastWinnerNumberMain = null;
+let winnerConfettiInterval = null;
+const confettiDurationMs = Math.max(400, Number(<?= json_encode($cfg["confete_duracao_ms"] ?? 1100) ?>) || 1100);
+const confettiIntervalMs = Math.max(300, Number(<?= json_encode($cfg["confete_intervalo_ms"] ?? ($cfg["confete_duracao_ms"] ?? 1100)) ?>) || confettiDurationMs);
+
+function launchWinnerConfetti(target){
+  const container = document.createElement("div");
+  container.className = "confetti";
+  const drop = Math.max(120, target.offsetHeight + 20);
+  container.style.setProperty("--confetti-drop", `${drop}px`);
+  for(let i=0;i<28;i+=1){
+    const piece = document.createElement("span");
+    piece.className = "confetti-piece";
+    piece.style.left = `${Math.random() * 100}%`;
+    piece.style.background = `hsl(${Math.random() * 360}, 90%, 60%)`;
+    piece.style.animationDelay = `${Math.random() * 0.2}s`;
+    piece.style.animationDuration = `${confettiDurationMs}ms`;
+    container.appendChild(piece);
+  }
+  target.appendChild(container);
+  setTimeout(() => container.remove(), confettiDurationMs + 200);
+}
+
+function startWinnerConfetti(target){
+  if(winnerConfettiInterval){
+    return;
+  }
+  launchWinnerConfetti(target);
+  winnerConfettiInterval = setInterval(() => {
+    launchWinnerConfetti(target);
+  }, confettiIntervalMs);
+}
+
+function stopWinnerConfetti(){
+  if(winnerConfettiInterval){
+    clearInterval(winnerConfettiInterval);
+    winnerConfettiInterval = null;
+  }
+}
+
 function renderWinner(winner){
   const card = document.getElementById("winnerCard");
   const content = document.getElementById("winnerContent");
+  const fireworksLeft = document.getElementById("fireworksLeft");
+  const fireworksRight = document.getElementById("fireworksRight");
   const list = (winner && winner.winners) ? winner.winners : [];
   if(!list.length){
     card.hidden = true;
     content.innerHTML = "";
+    lastWinnerNumberMain = null;
+    stopWinnerConfetti();
+    stopFireworks();
     return;
   }
   card.hidden = false;
-  content.innerHTML = list.map(w => `
+  const firstWinner = list[0];
+  lastWinnerNumberMain = firstWinner.num;
+  content.innerHTML = `
+    <div class="winner-message">PARABÊNS PELA CONQUISTA.!!!</div>
+    ${list.map(w => `
     <div class="winner-item">
       <div class="winner-number">#${String(w.num).padStart(4,"0")}</div>
       <div class="winner-info">
@@ -265,7 +316,93 @@ function renderWinner(winner){
         ${w.whatsapp ? `<div>WhatsApp: ${esc(w.whatsapp)}</div>` : ""}
       </div>
     </div>
-  `).join("");
+  `).join("")}
+  `;
+  fireworksLeft.hidden = false;
+  fireworksRight.hidden = false;
+  startFireworks();
+  startWinnerConfetti(card);
+}
+
+let fireworksInterval = null;
+const fireworksIntensity = Math.max(1, Number(<?= json_encode($cfg["fogos_intensidade"] ?? 2) ?>) || 1);
+const fireworksIntervalMs = Math.max(300, Number(<?= json_encode($cfg["fogos_intervalo_ms"] ?? 1200) ?>) || 1200);
+
+function createExplosion(container, x, y, hue){
+  const explosion = document.createElement("span");
+  explosion.className = "firework-explosion";
+  explosion.style.left = `${x}%`;
+  explosion.style.top = `${y}%`;
+  const particles = 14 + Math.floor(Math.random() * 6);
+  for(let i=0; i<particles; i+=1){
+    const particle = document.createElement("span");
+    particle.className = "firework-particle";
+    const angle = (Math.PI * 2 * i) / particles;
+    const distance = 40 + Math.random() * 45;
+    const dx = Math.cos(angle) * distance;
+    const dy = Math.sin(angle) * distance;
+    particle.style.setProperty("--dx", `${dx}px`);
+    particle.style.setProperty("--dy", `${dy}px`);
+    particle.style.setProperty("--hue", hue);
+    explosion.appendChild(particle);
+  }
+  container.appendChild(explosion);
+  setTimeout(() => explosion.remove(), 1200);
+}
+
+function createFirework(container){
+  const hue = Math.floor(Math.random() * 360);
+  const rocket = document.createElement("span");
+  rocket.className = "firework-rocket";
+  const x = 10 + Math.random() * 80;
+  const rise = 220 + Math.random() * 120;
+  rocket.style.left = `${x}%`;
+  rocket.style.setProperty("--hue", hue);
+  rocket.style.setProperty("--rise", `${rise}px`);
+  container.appendChild(rocket);
+  setTimeout(() => {
+    rocket.remove();
+    const y = 20 + Math.random() * 40;
+    createExplosion(container, x, y, hue);
+  }, 900);
+}
+
+function startFireworks(){
+  if(fireworksInterval){
+    return;
+  }
+  fireworksInterval = setInterval(() => {
+    const left = document.getElementById("fireworksLeft");
+    const right = document.getElementById("fireworksRight");
+    const maxBursts = Math.max(1, fireworksIntensity);
+    const step = Math.max(120, Math.floor(fireworksIntervalMs / (maxBursts + 1)));
+    for(let i=0; i<maxBursts; i+=1){
+      const delay = i * step;
+      if(left && !left.hidden){
+        setTimeout(() => createFirework(left), delay);
+      }
+      if(right && !right.hidden){
+        setTimeout(() => createFirework(right), delay + Math.floor(step / 2));
+      }
+    }
+  }, fireworksIntervalMs);
+}
+
+function stopFireworks(){
+  const left = document.getElementById("fireworksLeft");
+  const right = document.getElementById("fireworksRight");
+  if(left){
+    left.hidden = true;
+    left.innerHTML = "";
+  }
+  if(right){
+    right.hidden = true;
+    right.innerHTML = "";
+  }
+  if(fireworksInterval){
+    clearInterval(fireworksInterval);
+    fireworksInterval = null;
+  }
 }
 async function loadWinner(){
   try{
